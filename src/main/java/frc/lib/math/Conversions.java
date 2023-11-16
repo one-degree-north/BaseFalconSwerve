@@ -2,6 +2,9 @@ package frc.lib.math;
 
 public class Conversions {
 
+    public static double degreesToRadians(double degrees) {
+        return 2.0 * Math.PI * (degrees / 360.0);
+    }
     /**
      * @param positionCounts CANCoder Position Counts
      * @param gearRatio Gear Ratio between CANCoder and Mechanism
