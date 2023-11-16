@@ -8,8 +8,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -23,12 +29,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Swerve extends SubsystemBase {
-    public SwerveDriveOdometry swerveOdometry;
-    public SwerveModule[] mSwerveMods;
-    public AHRS gyro;
-    public PoseEstimatorSubsystem PoseEstimator;
-    public Field2d field2d;
-
+    private SwerveDriveOdometry swerveOdometry;
+    private SwerveModule[] mSwerveMods;
+    private AHRS gyro;
+    private PoseEstimatorSubsystem PoseEstimator;
+    private Field2d field2d;
+    private ChassisSpeeds chassisSpeeds;
 
     public Swerve() {
         gyro = new AHRS(SerialPort.Port.kMXP);
@@ -58,24 +64,25 @@ public class Swerve extends SubsystemBase {
         PoseEstimator.setAlliance(DriverStation.getAlliance());
 
         field2d = new Field2d();
-        
         SmartDashboard.putData(field2d);
+
+        chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
-        SwerveModuleState[] swerveModuleStates =
-            Constants.Swerve.swerveKinematics.toSwerveModuleStates(
-                fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    translation.getX(), 
-                                    translation.getY(), 
-                                    rotation, 
-                                    getYaw()
-                                )
-                                : new ChassisSpeeds(
-                                    translation.getX(), 
-                                    translation.getY(), 
-                                    rotation)
-                                );
+        chassisSpeeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
+            translation.getX(), 
+            translation.getY(), 
+            rotation, 
+            getYaw()
+        )
+        : new ChassisSpeeds(
+            translation.getX(), 
+            translation.getY(), 
+            rotation);
+        
+        SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+        
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
         for(SwerveModule mod : mSwerveMods){
@@ -92,16 +99,60 @@ public class Swerve extends SubsystemBase {
         }
     }    
 
+    public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
+        return PathPlanner.generatePath(
+            new PathConstraints(
+                Constants.Swerve.maxSpeed,
+                Constants.Swerve.maxAngularVelocity),
+            PathPoint.fromCurrentHolonomicState(Constants.Swerve.useVision ? this.getPhotonPose() : this.getOdometryPose(), this.getCurrentChassisSpeeds()),
+            new PathPoint(
+                targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
+    }
+
+    public PathPlannerTrajectory generateOnTheFlyTrajectory(
+        Pose2d targetPose, double driveVelocityConstraint, double driveAccelConstraint) {
+        var path =
+            PathPlanner.generatePath(
+                new PathConstraints(driveVelocityConstraint, driveAccelConstraint),
+                PathPoint.fromCurrentHolonomicState(Constants.Swerve.useVision ? this.getPhotonPose() : this.getOdometryPose(), this.getCurrentChassisSpeeds()),
+                new PathPoint(
+                    targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
+    
+        return path;
+    }
+  
+    public PathPlannerTrajectory generateOnTheFlyTrajectory(
+        List<Pose2d> targetPoses, double driveVelocityConstraint, double driveAccelConstraint) {
+  
+        ArrayList<PathPoint> points = new ArrayList<PathPoint>();
+    
+        points.add(PathPoint.fromCurrentHolonomicState(Constants.Swerve.useVision ? this.getPhotonPose() : this.getOdometryPose(), chassisSpeeds));
+    
+        for (Pose2d pos : targetPoses) {
+            points.add(new PathPoint(pos.getTranslation(), pos.getRotation()));
+        }
+    
+        var path =
+            PathPlanner.generatePath(
+                new PathConstraints(driveVelocityConstraint, driveAccelConstraint), points);
+    
+        return path;
+    }
+
+    public Pose2d getOdometryPose() {
+        return swerveOdometry.getPoseMeters();
+    }
+    
+    public void resetOdometry(Pose2d pose) {
+        swerveOdometry.resetPosition(getYaw(), getModulePositions(), pose);
+    }
+
     public Pose2d getPhotonPose() {
         return PoseEstimator.getCurrentPose();
     }
 
-    public Pose2d getPose() {
-        return swerveOdometry.getPoseMeters();
-    }
-
-    public void resetOdometry(Pose2d pose) {
-        swerveOdometry.resetPosition(getYaw(), getModulePositions(), pose);
+    public void resetPhotonPose(Pose2d pose) {
+        PoseEstimator.setCurrentPose(pose);
     }
 
     public SwerveModuleState[] getModuleStates(){
@@ -120,6 +171,10 @@ public class Swerve extends SubsystemBase {
         return positions;
     }
 
+    public ChassisSpeeds getCurrentChassisSpeeds() {
+        return chassisSpeeds;
+    }
+
     public void zeroGyro(){
         gyro.zeroYaw();
     }
@@ -136,7 +191,8 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
-        swerveOdometry.update(getYaw(), getModulePositions());  
+        swerveOdometry.update(getYaw(), getModulePositions());
+        field2d.setRobotPose(getPhotonPose());
 
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
@@ -144,6 +200,8 @@ public class Swerve extends SubsystemBase {
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond); 
         }
 
-        field2d.setRobotPose(getPhotonPose());
+        SmartDashboard.putNumber("Pose Estimator X (m)", getPhotonPose().getX());
+        SmartDashboard.putNumber("Pose Estimator Y (m)", getPhotonPose().getY());
+        SmartDashboard.putNumber("Pose Estimator Theta (deg)", getPhotonPose().getRotation().getDegrees());
     }
 }

@@ -22,7 +22,6 @@ public class TeleopSwerve extends CommandBase {
     private SlewRateLimiter slewRateLimiterX;
     private SlewRateLimiter slewRateLimiterY;
     private SlewRateLimiter slewRateLimiterR;
-    private final double rateLimit = 5;
 
     public TeleopSwerve(Swerve s_Swerve, DoubleSupplier translationSup, DoubleSupplier strafeSup, DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
         this.s_Swerve = s_Swerve;
@@ -33,9 +32,9 @@ public class TeleopSwerve extends CommandBase {
         this.rotationSup = rotationSup;
         this.robotCentricSup = robotCentricSup;
 
-        slewRateLimiterX = new SlewRateLimiter(rateLimit);
-        slewRateLimiterY = new SlewRateLimiter(rateLimit);
-        slewRateLimiterR = new SlewRateLimiter(rateLimit);
+        this.slewRateLimiterX = new SlewRateLimiter(Constants.rateLimitXY);
+        this.slewRateLimiterY = new SlewRateLimiter(Constants.rateLimitXY);
+        this.slewRateLimiterR = new SlewRateLimiter(Constants.rateLimitTheta);
     }
 
     @Override
