@@ -2,14 +2,12 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.lib.math.Conversions;
 import frc.lib.util.TunableNumber;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
@@ -96,6 +94,6 @@ public class RobotContainer {
             Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
         
         // An ExampleCommand will run in autonomous
-        return new FollowPath(s_Swerve.generateOnTheFlyTrajectory(new Pose2d(new Translation2d(3.132, 6.84), new Rotation2d(Conversions.degreesToRadians(177.3))), 1, 1), s_Swerve, false);
+        return autoChooser.getSelected();
     }
 }
