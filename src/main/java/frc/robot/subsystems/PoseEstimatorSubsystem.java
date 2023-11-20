@@ -15,8 +15,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
@@ -48,6 +48,7 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
   private final Supplier<SwerveModulePosition[]> modulePositionSupplier;
   private final SwerveDrivePoseEstimator poseEstimator;
   private final Field2d field2d = new Field2d();
+  private final Field2d visionField2d = new Field2d();
   private final PhotonRunnable photonEstimator = new PhotonRunnable();
   private final Notifier photonNotifier = new Notifier(photonEstimator);
 
@@ -71,11 +72,6 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     // Start PhotonVision thread
     photonNotifier.setName("PhotonRunnable");
     photonNotifier.startPeriodic(0.02);
-  }
-
-  public void addDashboardWidgets(ShuffleboardTab tab) {
-    tab.add("Field", field2d).withPosition(0, 0).withSize(6, 4);
-    tab.addString("Pose", this::getFomattedPose).withPosition(6, 2).withSize(2, 1);
   }
 
   /**
@@ -112,6 +108,7 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     poseEstimator.update(rotationSupplier.get(), modulePositionSupplier.get());
 
     var visionPose = photonEstimator.grabLatestEstimatedPose();
+    Pose2d dashboardVisionPose = null;
     if (visionPose != null) {
       // New pose from vision
       sawTag = true;
@@ -119,7 +116,11 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
       if (originPosition != kBlueAllianceWallRightSide) {
         pose2d = flipAlliance(pose2d);
       }
+      
       poseEstimator.addVisionMeasurement(pose2d, visionPose.timestampSeconds);
+
+      // Flip the pose when red, since the dashboard field photo cannot be rotated
+      dashboardVisionPose = flipAlliance(pose2d);
     }
 
     // Set the pose on the dashboard
@@ -128,10 +129,18 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
       // Flip the pose when red, since the dashboard field photo cannot be rotated
       dashboardPose = flipAlliance(dashboardPose);
     }
+
+    SmartDashboard.putString("Pose", getFormattedPose());
+
     field2d.setRobotPose(dashboardPose);
+    SmartDashboard.putData("Pose Estimator Field2d", field2d);
+
+    // TODO: see if this implementation of a vision pose getter works
+    visionField2d.setRobotPose(dashboardVisionPose);
+    SmartDashboard.putData("Vision Field2d", visionField2d);
   }
 
-  private String getFomattedPose() {
+  private String getFormattedPose() {
     var pose = getCurrentPose();
     return String.format("(%.3f, %.3f) %.2f degrees", 
         pose.getX(), 

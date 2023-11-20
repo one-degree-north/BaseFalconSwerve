@@ -24,7 +24,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -33,13 +32,31 @@ public class Swerve extends SubsystemBase {
     private SwerveModule[] mSwerveMods;
     private AHRS gyro;
     private PoseEstimatorSubsystem PoseEstimator;
-    private Field2d field2d;
     private ChassisSpeeds chassisSpeeds;
 
     public Swerve() {
         gyro = new AHRS(SerialPort.Port.kMXP);
+
+        // Calibrate gyro, and reset after calibration
         gyro.calibrate();
-        gyro.reset();
+        int counter = 0; boolean timedOut = false;
+        while (gyro.isCalibrating()){
+            if (counter > 4) {
+                timedOut = true;
+                break;
+            }
+            Timer.delay(0.5);
+            counter++;
+        }
+        if (!timedOut) {
+            System.out.println("Gyro calibration done!");
+            gyro.reset();
+        }
+        else {
+            System.out.println("Gyro calibration timed out!");
+        }
+
+        // Zero gyro after reset (shouldn't technically be needed)
         zeroGyro();
 
         mSwerveMods = new SwerveModule[] {
@@ -62,9 +79,6 @@ public class Swerve extends SubsystemBase {
 
         PoseEstimator = new PoseEstimatorSubsystem(rotSupplier, modSupplier);
         PoseEstimator.setAlliance(DriverStation.getAlliance());
-
-        field2d = new Field2d();
-        SmartDashboard.putData(field2d);
 
         chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
     }
@@ -175,6 +189,7 @@ public class Swerve extends SubsystemBase {
         return chassisSpeeds;
     }
 
+    //TODO: make sure everything with gyro works as intended
     public void zeroGyro(){
         gyro.zeroYaw();
     }
@@ -189,19 +204,22 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+    public void setYawAdjustment(double degrees) {
+        gyro.setAngleAdjustment(degrees);
+    }
+
+    public void resetYawToPhotonPose() {
+        this.setYawAdjustment(-getPhotonPose().getRotation().getDegrees());
+    }
+
     @Override
     public void periodic(){
         swerveOdometry.update(getYaw(), getModulePositions());
-        field2d.setRobotPose(getPhotonPose());
 
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond); 
         }
-
-        SmartDashboard.putNumber("Pose Estimator X (m)", getPhotonPose().getX());
-        SmartDashboard.putNumber("Pose Estimator Y (m)", getPhotonPose().getY());
-        SmartDashboard.putNumber("Pose Estimator Theta (deg)", getPhotonPose().getRotation().getDegrees());
     }
 }

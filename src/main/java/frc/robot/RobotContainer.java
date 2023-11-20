@@ -5,10 +5,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.lib.math.Conversions;
+import frc.lib.util.TunableNumber;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
 
@@ -34,9 +36,23 @@ public class RobotContainer {
     /* Subsystems */
     private final Swerve s_Swerve = new Swerve();
 
+    /* Auto Chooser */
+    private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+    private final String ROOT_TABLE = "Autos";
+
+    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX");
+    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY");
+    private final TunableNumber goToPoseTheta = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseTheta");
+    private Command goToPoseTunableAuto = new GoToPoseCommand(
+        new Pose2d(goToPoseX.get(), 
+        goToPoseY.get(), 
+        Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+        /* Adding Autos */
+        autoChooser.addOption("GoToPoseTunableAuto", goToPoseTunableAuto);
+
         s_Swerve.setDefaultCommand(
             new TeleopSwerve(
                 s_Swerve, 
@@ -49,6 +65,11 @@ public class RobotContainer {
 
         // Configure the button bindings
         configureButtonBindings();
+    }
+
+    /** Method is used to run teleop init commands without accessing Robot.java. Simply for ease of use */
+    public void teleopInit() {
+        s_Swerve.resetYawToPhotonPose();
     }
 
     /**
@@ -68,6 +89,12 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
+        // Resetting command because tunable numbers may have changed
+        goToPoseTunableAuto = new GoToPoseCommand(
+            new Pose2d(goToPoseX.get(), 
+            goToPoseY.get(), 
+            Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
+        
         // An ExampleCommand will run in autonomous
         return new FollowPath(s_Swerve.generateOnTheFlyTrajectory(new Pose2d(new Translation2d(3.132, 6.84), new Rotation2d(Conversions.degreesToRadians(177.3))), 1, 1), s_Swerve, false);
     }

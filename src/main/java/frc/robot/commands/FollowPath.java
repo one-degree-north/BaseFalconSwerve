@@ -51,6 +51,9 @@ public class FollowPath extends PPSwerveControllerCommand {
    *     and odometry will not be re-initialized in order to ensure a smooth transition between
    *     trajectories
    */
+
+   // TODO: Check if useAllianceColor should be true (probably not)
+
   public FollowPath(PathPlannerTrajectory trajectory, Swerve subsystem, boolean initialPath) {
     super(
         trajectory,
