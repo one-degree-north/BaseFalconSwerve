@@ -108,7 +108,6 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     poseEstimator.update(rotationSupplier.get(), modulePositionSupplier.get());
 
     var visionPose = photonEstimator.grabLatestEstimatedPose();
-    Pose2d dashboardVisionPose = null;
     if (visionPose != null) {
       // New pose from vision
       sawTag = true;
@@ -120,7 +119,8 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
       poseEstimator.addVisionMeasurement(pose2d, visionPose.timestampSeconds);
 
       // Flip the pose when red, since the dashboard field photo cannot be rotated
-      dashboardVisionPose = flipAlliance(pose2d);
+      visionField2d.setRobotPose(flipAlliance(pose2d));
+      SmartDashboard.putData("Vision Field2d", visionField2d);
     }
 
     // Set the pose on the dashboard
@@ -136,8 +136,6 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
     SmartDashboard.putData("Pose Estimator Field2d", field2d);
 
     // TODO: see if this implementation of a vision pose getter works
-    visionField2d.setRobotPose(dashboardVisionPose);
-    SmartDashboard.putData("Vision Field2d", visionField2d);
   }
 
   private String getFormattedPose() {
