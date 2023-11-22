@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -38,9 +39,9 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
     private final String ROOT_TABLE = "Autos";
 
-    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX");
-    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY");
-    private final TunableNumber goToPoseTheta = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseTheta");
+    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX", 2.114);
+    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY", 6.942);
+    private final TunableNumber goToPoseTheta = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseTheta", 180);
     private Command goToPoseTunableAuto = new GoToPoseCommand(
         new Pose2d(goToPoseX.get(), 
         goToPoseY.get(), 
@@ -49,6 +50,7 @@ public class RobotContainer {
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         /* Adding Autos */
+        SmartDashboard.putData(autoChooser);
         autoChooser.addOption("GoToPoseTunableAuto", goToPoseTunableAuto);
 
         s_Swerve.setDefaultCommand(
@@ -67,7 +69,7 @@ public class RobotContainer {
 
     /** Method is used to run teleop init commands without accessing Robot.java. Simply for ease of use */
     public void teleopInit() {
-        s_Swerve.resetYawToPhotonPose();
+
     }
 
     /**

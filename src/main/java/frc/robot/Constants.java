@@ -22,7 +22,7 @@ public final class Constants {
     public static final double rateLimitTheta = 5;
 
     // Set to true for TunableNumber tuning
-    public static final boolean TUNING_MODE = true;
+    public static final boolean TUNING_MODE = false;
 
     public static final class Swerve {
         public static final boolean useVision = true;
@@ -184,12 +184,12 @@ public final class Constants {
 
       
     public static final class AutoConstants { 
-        // TODO: These must be tuned to specific robot.
-        public static final double velocityConstraint = 1;
-        public static final double accelerationConstraint = 1;
+        // TODO: These must be tuned to specific robot
+        public static final double velocityConstraint = 0.4;
+        public static final double accelerationConstraint = 0.4;
     
-        public static final double X_kP = 1;
-        public static final double Y_kP = 1;
-        public static final double THETA_kP = 0.1;
+        public static final double X_kP = 0.1;
+        public static final double Y_kP = 0.1;
+        public static final double THETA_kP = 0.5;
     }
 }

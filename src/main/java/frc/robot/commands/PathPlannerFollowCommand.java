@@ -22,7 +22,7 @@ public class PathPlannerFollowCommand extends FollowPath {
   public PathPlannerFollowCommand(String pathName, Swerve drivetrain) {
     super(PathPlanner.loadPath(pathName, 
       new PathConstraints(tunableVelocityConstraint.get(), tunableAccelerationConstraint.get())), 
-    drivetrain, true);
+    drivetrain, false);
   }
 
 }

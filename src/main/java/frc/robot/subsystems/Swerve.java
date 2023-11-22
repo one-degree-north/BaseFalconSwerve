@@ -72,8 +72,6 @@ public class Swerve extends SubsystemBase {
         Timer.delay(1.0);
         resetModulesToAbsolute();
 
-        swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getYaw(), getModulePositions());
-
         Supplier<Rotation2d> rotSupplier = () -> getYaw();
         Supplier<SwerveModulePosition[]> modSupplier = () -> getModulePositions();
 
@@ -118,7 +116,7 @@ public class Swerve extends SubsystemBase {
             new PathConstraints(
                 Constants.Swerve.maxSpeed,
                 Constants.Swerve.maxAngularVelocity),
-            PathPoint.fromCurrentHolonomicState(Constants.Swerve.useVision ? this.getPhotonPose() : this.getOdometryPose(), this.getCurrentChassisSpeeds()),
+                PathPoint.fromCurrentHolonomicState(getPhotonPose(), chassisSpeeds),
             new PathPoint(
                 targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
     }
@@ -128,7 +126,7 @@ public class Swerve extends SubsystemBase {
         var path =
             PathPlanner.generatePath(
                 new PathConstraints(driveVelocityConstraint, driveAccelConstraint),
-                PathPoint.fromCurrentHolonomicState(Constants.Swerve.useVision ? this.getPhotonPose() : this.getOdometryPose(), this.getCurrentChassisSpeeds()),
+                PathPoint.fromCurrentHolonomicState(getPhotonPose(), chassisSpeeds),
                 new PathPoint(
                     targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
     
@@ -140,7 +138,7 @@ public class Swerve extends SubsystemBase {
   
         ArrayList<PathPoint> points = new ArrayList<PathPoint>();
     
-        points.add(PathPoint.fromCurrentHolonomicState(Constants.Swerve.useVision ? this.getPhotonPose() : this.getOdometryPose(), chassisSpeeds));
+        points.add( PathPoint.fromCurrentHolonomicState(getPhotonPose(), chassisSpeeds));
     
         for (Pose2d pos : targetPoses) {
             points.add(new PathPoint(pos.getTranslation(), pos.getRotation()));
@@ -204,17 +202,8 @@ public class Swerve extends SubsystemBase {
         }
     }
 
-    public void setYawAdjustment(double degrees) {
-        gyro.setAngleAdjustment(degrees);
-    }
-
-    public void resetYawToPhotonPose() {
-        this.setYawAdjustment(-getPhotonPose().getRotation().getDegrees());
-    }
-
     @Override
     public void periodic(){
-        swerveOdometry.update(getYaw(), getModulePositions());
 
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());

@@ -90,9 +90,16 @@ public class FollowPath extends PPSwerveControllerCommand {
 
     // reset the theta controller such that old accumulated ID values aren't used with the new path
     //      this doesn't matter if only the P value is non-zero, which is the current behavior
-    autoXController.reset();
-    autoYController.reset();
-    autoThetaController.reset();
+    // autoXController.reset();
+    // autoYController.reset();
+    // autoThetaController.reset();
+
+    // Enable continuous input for the rotational PID
+    autoThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    autoXController.setTolerance(0.02);
+    autoYController.setTolerance(0.02);
+    autoThetaController.setTolerance(0.02);
 
   }
 
