@@ -93,13 +93,13 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
         // No valid alliance data. Nothing we can do about it
     }
 
-    if (allianceChanged && sawTag) {
-      // The alliance changed, which changes the coordinate system.
-      // Since a tag was seen, and the tags are all relative to the coordinate system, the estimated pose
-      // needs to be transformed to the new coordinate system.
-      var newPose = flipAlliance(getCurrentPose());
-      poseEstimator.resetPosition(rotationSupplier.get(), modulePositionSupplier.get(), newPose);
-    }
+    // if (allianceChanged && sawTag) {
+    //   // The alliance changed, which changes the coordinate system.
+    //   // Since a tag was seen, and the tags are all relative to the coordinate system, the estimated pose
+    //   // needs to be transformed to the new coordinate system.
+    //   var newPose = flipAlliance(getCurrentPose());
+    //   poseEstimator.resetPosition(rotationSupplier.get(), modulePositionSupplier.get(), newPose);
+    // }
   }
 
   @Override
@@ -112,30 +112,30 @@ public class PoseEstimatorSubsystem extends SubsystemBase {
       // New pose from vision
       sawTag = true;
       var pose2d = visionPose.estimatedPose.toPose2d();
-      if (originPosition != kBlueAllianceWallRightSide) {
-        pose2d = flipAlliance(pose2d);
-      }
+
+      // if (originPosition != kBlueAllianceWallRightSide) {
+      //   pose2d = flipAlliance(pose2d);
+      // }
       
       poseEstimator.addVisionMeasurement(pose2d, visionPose.timestampSeconds);
 
       // Flip the pose when red, since the dashboard field photo cannot be rotated
-      visionField2d.setRobotPose(flipAlliance(pose2d));
+      visionField2d.setRobotPose(pose2d);
       SmartDashboard.putData("Vision Field2d", visionField2d);
     }
 
     // Set the pose on the dashboard
     var dashboardPose = poseEstimator.getEstimatedPosition();
-    if (originPosition == kRedAllianceWallRightSide) {
-      // Flip the pose when red, since the dashboard field photo cannot be rotated
-      dashboardPose = flipAlliance(dashboardPose);
-    }
+    // if (originPosition == kRedAllianceWallRightSide) {
+    //   // Flip the pose when red, since the dashboard field photo cannot be rotated
+    //   dashboardPose = flipAlliance(dashboardPose);
+    // }
 
     SmartDashboard.putString("Pose", getFormattedPose());
 
     field2d.setRobotPose(dashboardPose);
     SmartDashboard.putData("Pose Estimator Field2d", field2d);
 
-    // TODO: see if this implementation of a vision pose getter works
   }
 
   private String getFormattedPose() {
