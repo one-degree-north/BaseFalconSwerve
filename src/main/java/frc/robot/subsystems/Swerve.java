@@ -24,6 +24,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -33,8 +34,11 @@ public class Swerve extends SubsystemBase {
     private AHRS gyro;
     private PoseEstimatorSubsystem PoseEstimator;
     private ChassisSpeeds chassisSpeeds;
+    private Alliance pastAlliance;
 
     public Swerve() {
+        pastAlliance = DriverStation.getAlliance();
+
         gyro = new AHRS(SerialPort.Port.kMXP);
 
         // Calibrate gyro, and reset after calibration
@@ -82,7 +86,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
-        chassisSpeeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
+        this.chassisSpeeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
             translation.getX(), 
             translation.getY(), 
             rotation, 
@@ -93,7 +97,7 @@ public class Swerve extends SubsystemBase {
             translation.getY(), 
             rotation);
         
-        SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+        SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(this.chassisSpeeds);
         
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
@@ -101,7 +105,7 @@ public class Swerve extends SubsystemBase {
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }
     }    
-
+    
     /* Used by SwerveControllerCommand in Auto */
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
@@ -109,6 +113,7 @@ public class Swerve extends SubsystemBase {
         for(SwerveModule mod : mSwerveMods){
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
         }
+
     }    
 
     public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
@@ -116,7 +121,7 @@ public class Swerve extends SubsystemBase {
             new PathConstraints(
                 Constants.Swerve.maxSpeed,
                 Constants.Swerve.maxAngularVelocity),
-                PathPoint.fromCurrentHolonomicState(getPhotonPose(), chassisSpeeds),
+                PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
             new PathPoint(
                 targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
     }
@@ -126,7 +131,7 @@ public class Swerve extends SubsystemBase {
         var path =
             PathPlanner.generatePath(
                 new PathConstraints(driveVelocityConstraint, driveAccelConstraint),
-                PathPoint.fromCurrentHolonomicState(getPhotonPose(), chassisSpeeds),
+                PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
                 new PathPoint(
                     targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
     
@@ -138,7 +143,7 @@ public class Swerve extends SubsystemBase {
   
         ArrayList<PathPoint> points = new ArrayList<PathPoint>();
     
-        points.add( PathPoint.fromCurrentHolonomicState(getPhotonPose(), chassisSpeeds));
+        points.add(PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()));
     
         for (Pose2d pos : targetPoses) {
             points.add(new PathPoint(pos.getTranslation(), pos.getRotation()));
@@ -184,7 +189,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public ChassisSpeeds getCurrentChassisSpeeds() {
-        return chassisSpeeds;
+        return this.chassisSpeeds;
     }
 
     //TODO: make sure everything with gyro works as intended
@@ -204,6 +209,15 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
+        // Set alliance for Pose Estimator if it is changed.
+        if (DriverStation.getAlliance() == pastAlliance) 
+            PoseEstimator.setAlliance(DriverStation.getAlliance());
+        pastAlliance = DriverStation.getAlliance();
+
+        System.out.println("Vx: " + this.getCurrentChassisSpeeds().vxMetersPerSecond);
+        System.out.println("Vy: " + this.getCurrentChassisSpeeds().vyMetersPerSecond);
+        System.out.println("Omega: " + this.getCurrentChassisSpeeds().omegaRadiansPerSecond);
+
 
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());

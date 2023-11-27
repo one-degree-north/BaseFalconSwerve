@@ -190,6 +190,6 @@ public final class Constants {
     
         public static final double X_kP = 0.1;
         public static final double Y_kP = 0.1;
-        public static final double THETA_kP = 0.5;
+        public static final double THETA_kP = 0.1;
     }
 }
