@@ -146,8 +146,7 @@ public class Swerve extends SubsystemBase {
         double distanceX = end.getX()-initial.getX();
         double distanceY = end.getY()-initial.getY();
         return Rotation2d.fromRadians(
-            Math.atan(distanceY/distanceX)
-            ).rotateBy(Rotation2d.fromDegrees(180));
+            Math.atan(distanceY/distanceX));
     }
 
     public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
