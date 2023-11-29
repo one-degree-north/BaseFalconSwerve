@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
+import frc.lib.util.TunableNumber;
 import frc.robot.Constants;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -17,6 +18,7 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -35,6 +37,16 @@ public class Swerve extends SubsystemBase {
     private PoseEstimatorSubsystem PoseEstimator;
     private ChassisSpeeds chassisSpeeds;
     private Alliance pastAlliance;
+
+    private final static String ROOT_TABLE = "Swerve";
+
+    private final static TunableNumber tunableX_kP = new TunableNumber(ROOT_TABLE + "/X_kP", Constants.AutoConstants.X_kP);
+    private final static TunableNumber tunableY_kP = new TunableNumber(ROOT_TABLE + "/Y_kP", Constants.AutoConstants.Y_kP);
+    private final static TunableNumber tunableTHETA_kP = new TunableNumber(ROOT_TABLE + "/THETA_kP", Constants.AutoConstants.THETA_kP);
+
+    public final PIDController autoXController = new PIDController(tunableX_kP.get(), 0, 0);
+    public final PIDController autoYController = new PIDController(tunableY_kP.get(), 0, 0);
+    public final PIDController autoThetaController = new PIDController(tunableTHETA_kP.get(), 0, 0);
 
     public Swerve() {
         pastAlliance = DriverStation.getAlliance();
@@ -83,6 +95,8 @@ public class Swerve extends SubsystemBase {
         PoseEstimator.setAlliance(DriverStation.getAlliance());
 
         chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
+
+        autoThetaController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
@@ -105,6 +119,18 @@ public class Swerve extends SubsystemBase {
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
         }
     }    
+
+    public PIDController getAutoXController() {
+        return autoXController;
+    }
+
+    public PIDController getAutoYController() {
+        return autoYController;
+    }
+
+    public PIDController getAutoThetaController() {
+        return autoThetaController;
+    }
     
     /* Used by SwerveControllerCommand in Auto */
     public void setModuleStates(SwerveModuleState[] desiredStates) {
@@ -114,7 +140,15 @@ public class Swerve extends SubsystemBase {
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
         }
 
-    }    
+    }
+
+    public Rotation2d getHeading(Pose2d initial, Pose2d end) {
+        double distanceX = end.getX()-initial.getX();
+        double distanceY = end.getY()-initial.getY();
+        return Rotation2d.fromRadians(
+            Math.atan(distanceY/distanceX)
+            ).rotateBy(Rotation2d.fromDegrees(180));
+    }
 
     public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
         return PathPlanner.generatePath(
@@ -126,14 +160,16 @@ public class Swerve extends SubsystemBase {
                 targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
     }
 
+    // only testing on this generateonthefly method
     public PathPlannerTrajectory generateOnTheFlyTrajectory(
         Pose2d targetPose, double driveVelocityConstraint, double driveAccelConstraint) {
+
         var path =
             PathPlanner.generatePath(
                 new PathConstraints(driveVelocityConstraint, driveAccelConstraint),
                 PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
                 new PathPoint(
-                    targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
+                    targetPose.getTranslation(), this.getHeading(this.getPhotonPose(), targetPose), targetPose.getRotation()));
     
         return path;
     }
@@ -209,15 +245,18 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
+        this.chassisSpeeds = Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
+
+        if (tunableX_kP.hasChanged()) {autoXController.setPID(tunableX_kP.get(), 0, 0);}
+        if (tunableY_kP.hasChanged()) {autoYController.setPID(tunableY_kP.get(), 0, 0);}
+        if (tunableTHETA_kP.hasChanged()) {autoThetaController.setPID(tunableTHETA_kP.get(), 0, 0);}
+
         // Set alliance for Pose Estimator if it is changed.
         if (DriverStation.getAlliance() == pastAlliance) 
             PoseEstimator.setAlliance(DriverStation.getAlliance());
         pastAlliance = DriverStation.getAlliance();
 
-        System.out.println("Vx: " + this.getCurrentChassisSpeeds().vxMetersPerSecond);
-        System.out.println("Vy: " + this.getCurrentChassisSpeeds().vyMetersPerSecond);
-        System.out.println("Omega: " + this.getCurrentChassisSpeeds().omegaRadiansPerSecond);
-
+        SmartDashboard.putNumber("Gyro Rotation", getYaw().getDegrees());
 
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());

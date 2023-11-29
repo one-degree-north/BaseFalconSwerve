@@ -2,13 +2,14 @@ package frc.robot.commands;
 
 import static frc.robot.Constants.Swerve.*;
 
+import java.lang.reflect.Field;
+
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.lib.util.TunableNumber;
-import frc.robot.Constants;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.Swerve;
 
 //TODO: Test paths on both blue/red alliance
@@ -28,15 +29,9 @@ public class FollowPath extends PPSwerveControllerCommand {
   private Swerve drivetrain;
   private PathPlannerTrajectory trajectory;
   private boolean initialPath;
-  private final static String ROOT_TABLE = "Follow_Path";
+  private Field2d trajectoryVisual;
 
-  private final static TunableNumber tunableX_kP = new TunableNumber(ROOT_TABLE + "/X_kP", Constants.AutoConstants.X_kP);
-  private final static TunableNumber tunableY_kP = new TunableNumber(ROOT_TABLE + "/Y_kP", Constants.AutoConstants.Y_kP);
-  private final static TunableNumber tunableTHETA_kP = new TunableNumber(ROOT_TABLE + "/THETA_kP", Constants.AutoConstants.THETA_kP);
-
-  private final static PIDController autoXController = new PIDController(tunableX_kP.get(), 0, 0);
-  private final static PIDController autoYController = new PIDController(tunableY_kP.get(), 0, 0);
-  private final static PIDController autoThetaController = new PIDController(tunableTHETA_kP.get(), 0, 0);
+  
 
   /**
    * Constructs a new FollowPath object.
@@ -58,9 +53,9 @@ public class FollowPath extends PPSwerveControllerCommand {
         trajectory,
         subsystem::getPhotonPose,
         swerveKinematics,
-        autoXController,
-        autoYController,
-        autoThetaController,
+        subsystem.getAutoXController(),
+        subsystem.getAutoYController(),
+        subsystem.getAutoThetaController(),
         subsystem::setModuleStates,
         true,
         subsystem);
@@ -68,6 +63,9 @@ public class FollowPath extends PPSwerveControllerCommand {
     this.drivetrain = subsystem;
     this.trajectory = trajectory;
     this.initialPath = initialPath;
+    this.trajectoryVisual = new Field2d();
+
+    addRequirements(drivetrain);
   }
 
   /**
@@ -87,26 +85,28 @@ public class FollowPath extends PPSwerveControllerCommand {
       this.drivetrain.resetPhotonPose(this.trajectory.getInitialState().poseMeters);
     }
 
+
+
     // reset the theta controller such that old accumulated ID values aren't used with the new path
     //      this doesn't matter if only the P value is non-zero, which is the current behavior
-    // autoXController.reset();
-    // autoYController.reset();
-    // autoThetaController.reset();
+    drivetrain.getAutoXController().reset();
+    drivetrain.getAutoYController().reset();
+    drivetrain.getAutoThetaController().reset();
 
-    // Enable continuous input for the rotational PID
-    autoThetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    autoXController.setTolerance(0.02);
-    autoYController.setTolerance(0.02);
-    autoThetaController.setTolerance(0.02);
+    drivetrain.getAutoXController().setTolerance(0.02);
+    drivetrain.getAutoYController().setTolerance(0.02);
+    drivetrain.getAutoThetaController().setTolerance(0.02);
 
   }
 
   @Override
   public void execute() {
-    if (tunableX_kP.hasChanged()) {autoXController.setPID(tunableX_kP.get(), 0, 0);}
-    if (tunableY_kP.hasChanged()) {autoYController.setPID(tunableY_kP.get(), 0, 0);}
-    if (tunableTHETA_kP.hasChanged()) {autoThetaController.setPID(tunableTHETA_kP.get(), 0, 0);}
+    trajectoryVisual.getObject("Auto").setTrajectory(trajectory);
+
+    SmartDashboard.putNumber("FollowPath Init X", this.trajectory.getInitialState().poseMeters.getX());
+    SmartDashboard.putNumber("FollowPath Init Y", this.trajectory.getInitialState().poseMeters.getY());
+    SmartDashboard.putNumber("FollowPath Init Theta", this.trajectory.getInitialState().poseMeters.getRotation().getDegrees());
+    SmartDashboard.putData("Auto Trajectory", trajectoryVisual);
 
     super.execute();
   }
@@ -119,7 +119,7 @@ public class FollowPath extends PPSwerveControllerCommand {
    */
   @Override
   public void end(boolean interrupted) {
-    this.drivetrain.drive(new Translation2d(0, 0), 0, true, true);
+    this.drivetrain.drive(new Translation2d(0, 0), 0, false, false);
     super.end(interrupted);
   }
 }

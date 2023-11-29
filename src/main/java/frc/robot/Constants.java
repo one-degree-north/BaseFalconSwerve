@@ -22,7 +22,7 @@ public final class Constants {
     public static final double rateLimitTheta = 5;
 
     // Set to true for TunableNumber tuning
-    public static final boolean TUNING_MODE = false;
+    public static final boolean TUNING_MODE = true;
 
     public static final class Swerve {
         public static final boolean useVision = true;

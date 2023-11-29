@@ -39,8 +39,8 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
     private final String ROOT_TABLE = "Autos";
 
-    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX", 2.114);
-    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY", 6.942);
+    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX", 14.2);
+    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY", 1.1);
     private final TunableNumber goToPoseTheta = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseTheta", 180);
     private Command goToPoseTunableAuto = new GoToPoseCommand(
         new Pose2d(goToPoseX.get(), 
@@ -96,6 +96,7 @@ public class RobotContainer {
             Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
         
         // An ExampleCommand will run in autonomous
-        return autoChooser.getSelected();
+        // return autoChooser.getSelected();
+        return new PathPlannerFollowCommand("New Path", s_Swerve);
     }
 }
