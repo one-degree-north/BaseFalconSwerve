@@ -46,12 +46,15 @@ public class RobotContainer {
         new Pose2d(goToPoseX.get(), 
         goToPoseY.get(), 
         Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
+    
+    private Command twoMeters = new PathPlannerFollowCommand("Two meter path from absolute position", s_Swerve);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         /* Adding Autos */
         SmartDashboard.putData(autoChooser);
         autoChooser.addOption("GoToPoseTunableAuto", goToPoseTunableAuto);
+        autoChooser.addOption("Drive Back Two Meters", twoMeters);
 
         s_Swerve.setDefaultCommand(
             new TeleopSwerve(
@@ -95,8 +98,7 @@ public class RobotContainer {
             goToPoseY.get(), 
             Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
         
-        // An ExampleCommand will run in autonomous
-        // return autoChooser.getSelected();
-        return new PathPlannerFollowCommand("New Path", s_Swerve);
+
+        return autoChooser.getSelected();
     }
 }
