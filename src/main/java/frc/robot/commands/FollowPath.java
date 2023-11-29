@@ -52,7 +52,6 @@ public class FollowPath extends PPSwerveControllerCommand {
    *     trajectories
    */
 
-   // TODO: Check if useAllianceColor should be true (probably not)
 
   public FollowPath(PathPlannerTrajectory trajectory, Swerve subsystem, boolean initialPath) {
     super(
@@ -63,7 +62,7 @@ public class FollowPath extends PPSwerveControllerCommand {
         autoYController,
         autoThetaController,
         subsystem::setModuleStates,
-        false,
+        true,
         subsystem);
 
     this.drivetrain = subsystem;
