@@ -9,6 +9,7 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,7 +30,7 @@ import frc.robot.subsystems.Swerve;
  */
 public class FollowPath extends PPSwerveControllerCommand {
   private Swerve drivetrain;
-  private PathPlannerTrajectory trajectory;
+  PathPlannerTrajectory trajectory;
   private boolean initialPath;
   private Field2d trajectoryVisual;
 
@@ -81,7 +82,6 @@ public class FollowPath extends PPSwerveControllerCommand {
   @Override
   public void initialize() {
     // TODO: check trajectory.fromGUI in the super class
-    super.initialize();
 
     if (initialPath) {
       // reset odometry to the starting pose of the trajectory
@@ -104,12 +104,13 @@ public class FollowPath extends PPSwerveControllerCommand {
     drivetrain.getAutoYController().setTolerance(0.02);
     drivetrain.getAutoThetaController().setTolerance(0.02);
 
+    super.initialize();
   }
 
   @Override
   public void execute() {
-    super.execute();
     trajectoryVisual.setRobotPose(this.drivetrain.getPhotonPose());
+    super.execute();
   }
 
   /**

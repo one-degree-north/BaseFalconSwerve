@@ -16,11 +16,23 @@ public class GoToPoseCommand extends FollowPath {
   new TunableNumber(ROOT_TABLE + "/velocityConstraint", Constants.AutoConstants.velocityConstraint);
   private final static TunableNumber tunableAccelerationConstraint = 
   new TunableNumber(ROOT_TABLE + "/accelerationConstraint", Constants.AutoConstants.accelerationConstraint);
+  private Swerve drive;
+  private Pose2d pose;
 
   public GoToPoseCommand(Pose2d targetPose, Swerve drivetrain) {
     super(drivetrain.generateOnTheFlyTrajectory(targetPose, 
     tunableVelocityConstraint.get(), tunableAccelerationConstraint.get()), 
     drivetrain, false);
+    this.drive = drivetrain;
+    this.pose = targetPose;
+    addRequirements(drive);
+  }
+
+  @Override
+  public void initialize() {
+    super.trajectory = drive.generateOnTheFlyTrajectory(pose, 
+    tunableVelocityConstraint.get(), tunableAccelerationConstraint.get());
+    super.initialize();
   }
   
 

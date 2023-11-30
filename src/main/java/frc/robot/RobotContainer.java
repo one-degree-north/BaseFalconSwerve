@@ -33,6 +33,8 @@ public class RobotContainer {
     /* Driver Buttons */
     private final JoystickButton zeroGyro = new JoystickButton(driver, XboxController.Button.kY.value);
     private final JoystickButton robotCentric = new JoystickButton(driver, XboxController.Button.kLeftBumper.value);
+    private final JoystickButton goToPos = new JoystickButton(driver, XboxController.Button.kX.value);
+
 
     /* Subsystems */
     private final Swerve s_Swerve = new Swerve();
@@ -41,20 +43,25 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
     private final String ROOT_TABLE = "Autos";
 
-    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX", 14.2);
-    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY", 1.1);
-    private final TunableNumber goToPoseTheta = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseTheta", 180);
+    private final TunableNumber goToPoseX = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseX", 12);
+    private final TunableNumber goToPoseY = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseY", 0.1);
+    private final TunableNumber goToPoseTheta = new TunableNumber(ROOT_TABLE + "/TestAutos/GoToPoseTheta", 0);
+    
+    private Command twoMeters = new PathPlannerFollowCommand("Drive Back Two Meters", s_Swerve);
     private Command goToPoseTunableAuto = new GoToPoseCommand(
         new Pose2d(goToPoseX.get(), 
         goToPoseY.get(), 
         Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
-    
-    private Command twoMeters = new PathPlannerFollowCommand("Drive Back Two Meters", s_Swerve);
+
+    public Command getGoToPoseCommand(Pose2d pose) {
+        return new GoToPoseCommand(pose, s_Swerve);
+    }
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         /* Adding Autos */
         SmartDashboard.putData(autoChooser);
+        
         autoChooser.addOption("GoToPoseTunableAuto", goToPoseTunableAuto);
         autoChooser.addOption("Drive Back Two Meters", twoMeters);
 
@@ -86,6 +93,10 @@ public class RobotContainer {
     private void configureButtonBindings() {
         /* Driver Buttons */
         zeroGyro.onTrue(new InstantCommand(() -> s_Swerve.zeroGyro()));
+        goToPos.whileTrue(getGoToPoseCommand(
+            new Pose2d(goToPoseX.get(), 
+            goToPoseY.get(), 
+            Rotation2d.fromDegrees(goToPoseTheta.get()))));
     }
 
     /**
@@ -95,8 +106,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // Resetting command because tunable numbers may have changed
-        
-        
 
         return autoChooser.getSelected();
     }

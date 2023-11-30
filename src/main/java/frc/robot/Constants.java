@@ -187,10 +187,10 @@ public final class Constants {
     public static final class AutoConstants { 
         // TODO: These must be tuned to specific robot
         public static final double velocityConstraint = 0.4;
-        public static final double accelerationConstraint = 0.4;
+        public static final double accelerationConstraint = 1;
     
         public static final double X_kP = 0.1;
         public static final double Y_kP = 0.1;
-        public static final double THETA_kP = 0.1;
+        public static final double THETA_kP = 0.6;
     }
 }

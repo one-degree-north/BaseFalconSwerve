@@ -150,47 +150,49 @@ public class Swerve extends SubsystemBase {
             Math.atan2(distanceY, distanceX));
     }
 
-    public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
-        return PathPlanner.generatePath(
-            new PathConstraints(
-                Constants.Swerve.maxSpeed,
-                Constants.Swerve.maxAngularVelocity),
-                PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
-            new PathPoint(
-                targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
-    }
+    // public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
+    //     return PathPlanner.generatePath(
+    //         new PathConstraints(
+    //             Constants.Swerve.maxSpeed,
+    //             Constants.Swerve.maxAngularVelocity),
+    //             PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
+    //         new PathPoint(
+    //             targetPose.getTranslation(), Rotation2d.fromDegrees(0), targetPose.getRotation()));
+    // }
 
     // only testing on this generateonthefly method
     public PathPlannerTrajectory generateOnTheFlyTrajectory(
         Pose2d targetPose, double driveVelocityConstraint, double driveAccelConstraint) {
+        this.chassisSpeeds = Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
 
         var path =
             PathPlanner.generatePath(
                 new PathConstraints(driveVelocityConstraint, driveAccelConstraint),
-                PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
+                // PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
+                new PathPoint(this.getPhotonPose().getTranslation(), this.getHeading(this.getPhotonPose(), targetPose), this.getPhotonPose().getRotation()),
                 new PathPoint(
                     targetPose.getTranslation(), this.getHeading(this.getPhotonPose(), targetPose), targetPose.getRotation()));
         
         return path;
     }
   
-    public PathPlannerTrajectory generateOnTheFlyTrajectory(
-        List<Pose2d> targetPoses, double driveVelocityConstraint, double driveAccelConstraint) {
+    // public PathPlannerTrajectory generateOnTheFlyTrajectory(
+    //     List<Pose2d> targetPoses, double driveVelocityConstraint, double driveAccelConstraint) {
   
-        ArrayList<PathPoint> points = new ArrayList<PathPoint>();
+    //     ArrayList<PathPoint> points = new ArrayList<PathPoint>();
     
-        points.add(PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()));
+    //     points.add(PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()));
     
-        for (Pose2d pos : targetPoses) {
-            points.add(new PathPoint(pos.getTranslation(), pos.getRotation()));
-        }
+    //     for (Pose2d pos : targetPoses) {
+    //         points.add(new PathPoint(pos.getTranslation(), pos.getRotation()));
+    //     }
     
-        var path =
-            PathPlanner.generatePath(
-                new PathConstraints(driveVelocityConstraint, driveAccelConstraint), points);
+    //     var path =
+    //         PathPlanner.generatePath(
+    //             new PathConstraints(driveVelocityConstraint, driveAccelConstraint), points);
     
-        return path;
-    }
+    //     return path;
+    // }
 
     public Pose2d getOdometryPose() {
         return swerveOdometry.getPoseMeters();
@@ -245,16 +247,18 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
-        this.chassisSpeeds = Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
 
         if (tunableX_kP.hasChanged()) {autoXController.setPID(tunableX_kP.get(), 0, 0);}
         if (tunableY_kP.hasChanged()) {autoYController.setPID(tunableY_kP.get(), 0, 0);}
         if (tunableTHETA_kP.hasChanged()) {autoThetaController.setPID(tunableTHETA_kP.get(), 0, 0);}
 
         // Set alliance for Pose Estimator if it is changed.
-        if (DriverStation.getAlliance() == pastAlliance) 
-            PoseEstimator.setAlliance(DriverStation.getAlliance());
-        pastAlliance = DriverStation.getAlliance();
+        // if (DriverStation.getAlliance() == pastAlliance) 
+        //     PoseEstimator.setAlliance(DriverStation.getAlliance());
+        // pastAlliance = DriverStation.getAlliance();
+
+        SmartDashboard.putString("getPhotonPose", "(" + getPhotonPose().getX()
+        + ", " + getPhotonPose().getY() + "), " + getPhotonPose().getRotation().getDegrees());
 
         SmartDashboard.putNumber("Gyro Rotation", getYaw().getDegrees());
 
