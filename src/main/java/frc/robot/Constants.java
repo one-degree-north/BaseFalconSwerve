@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.math.Conversions;
 import frc.lib.util.COTSFalconSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
@@ -22,7 +23,7 @@ public final class Constants {
     public static final double rateLimitTheta = 5;
 
     // Set to true for TunableNumber tuning
-    public static final boolean TUNING_MODE = true;
+    public static final boolean TUNING_MODE = false;
 
     public static final class Swerve {
         public static final boolean useVision = true;

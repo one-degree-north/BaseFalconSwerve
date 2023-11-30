@@ -4,10 +4,12 @@ import static frc.robot.Constants.Swerve.*;
 
 import java.lang.reflect.Field;
 
+import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.Swerve;
@@ -78,14 +80,19 @@ public class FollowPath extends PPSwerveControllerCommand {
    */
   @Override
   public void initialize() {
+    // TODO: check trajectory.fromGUI in the super class
     super.initialize();
 
     if (initialPath) {
       // reset odometry to the starting pose of the trajectory
       this.drivetrain.resetPhotonPose(this.trajectory.getInitialState().poseMeters);
     }
+    
+    if (trajectory != null){
+      trajectoryVisual.getObject("Auto").setTrajectory(trajectory);
+      SmartDashboard.putData("Auto Trajectory", trajectoryVisual);
 
-
+    }    
 
     // reset the theta controller such that old accumulated ID values aren't used with the new path
     //      this doesn't matter if only the P value is non-zero, which is the current behavior
@@ -101,14 +108,8 @@ public class FollowPath extends PPSwerveControllerCommand {
 
   @Override
   public void execute() {
-    trajectoryVisual.getObject("Auto").setTrajectory(trajectory);
-
-    SmartDashboard.putNumber("FollowPath Init X", this.trajectory.getInitialState().poseMeters.getX());
-    SmartDashboard.putNumber("FollowPath Init Y", this.trajectory.getInitialState().poseMeters.getY());
-    SmartDashboard.putNumber("FollowPath Init Theta", this.trajectory.getInitialState().poseMeters.getRotation().getDegrees());
-    SmartDashboard.putData("Auto Trajectory", trajectoryVisual);
-
     super.execute();
+    trajectoryVisual.setRobotPose(this.drivetrain.getPhotonPose());
   }
 
   /**
@@ -119,7 +120,7 @@ public class FollowPath extends PPSwerveControllerCommand {
    */
   @Override
   public void end(boolean interrupted) {
-    this.drivetrain.drive(new Translation2d(0, 0), 0, false, false);
     super.end(interrupted);
+    this.drivetrain.drive(new Translation2d(0, 0), 0, false, false);
   }
 }

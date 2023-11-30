@@ -23,6 +23,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory.State;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
@@ -146,7 +147,7 @@ public class Swerve extends SubsystemBase {
         double distanceX = end.getX()-initial.getX();
         double distanceY = end.getY()-initial.getY();
         return Rotation2d.fromRadians(
-            Math.atan(distanceY/distanceX));
+            Math.atan2(distanceY, distanceX));
     }
 
     public PathPlannerTrajectory generateOnTheFlyTrajectory(Pose2d targetPose) {
@@ -169,7 +170,7 @@ public class Swerve extends SubsystemBase {
                 PathPoint.fromCurrentHolonomicState(this.getPhotonPose(), this.getCurrentChassisSpeeds()),
                 new PathPoint(
                     targetPose.getTranslation(), this.getHeading(this.getPhotonPose(), targetPose), targetPose.getRotation()));
-    
+        
         return path;
     }
   
