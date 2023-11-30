@@ -11,10 +11,22 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
-      "/SmartDashboard/Pose Estimator Field2d": "Field2d"
+      "/SmartDashboard/Auto Trajectory": "Field2d",
+      "/SmartDashboard/Pose Estimator Field2d": "Field2d",
+      "/SmartDashboard/SendableChooser[0]": "String Chooser"
     },
     "windows": {
+      "/SmartDashboard/Auto Trajectory": {
+        "window": {
+          "visible": true
+        }
+      },
       "/SmartDashboard/Pose Estimator Field2d": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/SendableChooser[0]": {
         "window": {
           "visible": true
         }

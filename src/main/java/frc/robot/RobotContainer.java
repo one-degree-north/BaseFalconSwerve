@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -10,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.lib.util.TunableNumber;
+import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.commands.*;
 import frc.robot.subsystems.*;
 
@@ -47,7 +49,7 @@ public class RobotContainer {
         goToPoseY.get(), 
         Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
     
-    private Command twoMeters = new PathPlannerFollowCommand("Two meter path from absolute position", s_Swerve);
+    private Command twoMeters = new PathPlannerFollowCommand("Drive Back Two Meters", s_Swerve);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -93,10 +95,7 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // Resetting command because tunable numbers may have changed
-        goToPoseTunableAuto = new GoToPoseCommand(
-            new Pose2d(goToPoseX.get(), 
-            goToPoseY.get(), 
-            Rotation2d.fromDegrees(goToPoseTheta.get())), s_Swerve);
+        
         
 
         return autoChooser.getSelected();
