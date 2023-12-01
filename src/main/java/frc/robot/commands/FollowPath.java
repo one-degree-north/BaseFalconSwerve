@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import frc.robot.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
@@ -69,6 +69,11 @@ public class FollowPath extends PPSwerveControllerCommand {
     this.trajectoryVisual = new Field2d();
 
     addRequirements(drivetrain);
+  }
+
+  public void changeTrajectory(PathPlannerTrajectory traj) {
+    super.trajectory = traj;
+    this.trajectory = traj;
   }
 
   /**

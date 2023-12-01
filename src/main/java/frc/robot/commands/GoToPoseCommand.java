@@ -30,8 +30,9 @@ public class GoToPoseCommand extends FollowPath {
 
   @Override
   public void initialize() {
-    super.trajectory = drive.generateOnTheFlyTrajectory(pose, 
-    tunableVelocityConstraint.get(), tunableAccelerationConstraint.get());
+    super.changeTrajectory(drive.generateOnTheFlyTrajectory(pose, 
+    tunableVelocityConstraint.get(), tunableAccelerationConstraint.get()));
+
     super.initialize();
   }
   
